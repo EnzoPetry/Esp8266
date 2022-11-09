@@ -36,7 +36,6 @@ void setup() {
     Serial.print(".");
   }
   Serial.println("Conectando...\n");
-  int usos;
 }
 
 void loop() {
