@@ -11,19 +11,19 @@
 #define STAPSK1  "Olasenhor1"
 #define STASSID2 "TESTE A"
 #define STAPSK2  "12345678"
-#define echoPin 2 // attach pin D2 Arduino to pin Echo of HC-SR04
-#define trigPin 3 //attach pin D3 Arduino to pin Trig of HC-SR04
+#define echoPinEnt 2 // attach pin D2 Arduino to pin Echo of HC-SR04
+#define trigPinEnt 3 //attach pin D3 Arduino to pin Trig of HC-SR04
+#define echoPinSai 4 // attach pin D4 Arduino to pin Echo of HC-SR04
+#define trigPinSai 5 //attach pin D5 Arduino to pin Trig of HC-SR04
 
 
 
 //ESP8266WiFiMulti WiFiMulti;
 
-//const char fingerprint[] PROGMEM =  "49 07 75 57 93 8F D6 CD EE 60 A0 48 6B 59 FB ED 02 E3 D4 A4";
-int sensor = 4;
-//int res = 5;
-//int usos = 0;
-long duration; // variable for the duration of sound wave travel
-int distance; // variable for the distance measurement
+long durationEnt; // variable for the duration of sound wave travel
+int distanceEnt; // variable for the distance measurement
+long durationSai; // variable for the duration of sound wave travel
+int distanceSai; // variable for the distance measurement
 int entrada = 0;
 int saida = 0;
 int pessoas = 0;
@@ -31,74 +31,88 @@ int pessoas = 0;
 void setup() {
 
   Serial.begin(115200);
-  pinMode(sensor, INPUT);
-  //pinMode(res, OUTPUT);
-  pinMode(trigPin, OUTPUT); // Sets the trigPin as an OUTPUT
-  pinMode(echoPin, INPUT); // Sets the echoPin as an INPUT
-  //Serial.println();
-  //Serial.println();
-  // Serial.println();
 
-  //WiFi.begin(STASSID2, STAPSK2);
+  pinMode(trigPinEnt, OUTPUT); // Sets the trigPin as an OUTPUT
+  pinMode(echoPinEnt, INPUT); // Sets the echoPin as an INPUT
+  pinMode(trigPinSai, OUTPUT); // Sets the trigPin as an OUTPUT
+  pinMode(echoPinSai, INPUT); // Sets the echoPin as an INPUT
+
+  WiFi.begin(STASSID2, STAPSK2);
 
 
-  //while (WiFi.status() != WL_CONNECTED) {
-  //  delay(2000);
-  //  Serial.print(".");
-  //}
-  // Serial.println("");
-  //Serial.print("Connected! IP address: ");
-  //Serial.println(WiFi.localIP());
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(2000);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.print("Connected! IP address: ");
+  Serial.println(WiFi.localIP());
 
 
 }
 
 void loop() {
-  // wait for WiFi connection
-  //if ((WiFi.status() == WL_CONNECTED)) {
+  //wait for WiFi connection
+  if ((WiFi.status() == WL_CONNECTED)) {
 
-  // std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
-  // client->setFingerprint(fingerprint);
-  // HTTPClient https;
+  //std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
+  //client->setFingerprint(fingerprint);
+  HTTPClient https;
 
-  //Serial.print("[HTTP] begin...\n");
-  // configure traged server and url
-  // https.begin(*client, "https://dispenser.berjooj.com/api/dispenser"); //HTTP
-  // https.addHeader("Content-Type", "application/json");
+  Serial.print("[HTTP] begin...\n");
+  //configure traged server and url
+  https.begin(*client, "https://dispenser.berjooj.com/api/dispenser"); //HTTP
+  https.addHeader("Content-Type", "application/json");
 
-  digitalWrite(trigPin, LOW);
+  digitalWrite(trigPinEnt, LOW);
   delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
+  digitalWrite(trigPinEnt, HIGH);
   delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-  duration = pulseIn(echoPin, HIGH);
-  distance = duration * 0.034 / 2;
+  digitalWrite(trigPinEnt, LOW);
+  durationEnt = pulseIn(echoPinEnt, HIGH);
+  distanceEnt = durationEnt * 0.034 / 2;
   //Serial.println(distance);
-  bool tes = digitalRead(sensor);
 
-  if (distance <= 30 && entrada == saida) {
+  digitalWrite(trigPinSai, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPinSai, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPinSai, LOW);
+  durationSai = pulseIn(echoPinSai, HIGH);
+  distanceSai = durationSai * 0.034 / 2;
+  //Serial.println(distance);
+
+  if (distanceEnt <= 30 && entrada == saida) {
     entrada += 1;
     while (entrada > saida) {
      // Serial.println("Aguardando Entrada");
-      if ((digitalRead(sensor) == HIGH)) {
+      digitalWrite(trigPinSai, LOW);
+      delayMicroseconds(2);
+      digitalWrite(trigPinSai, HIGH);
+      delayMicroseconds(10);
+      digitalWrite(trigPinSai, LOW);
+      durationSai = pulseIn(echoPinSai, HIGH);
+      distanceSai = durationSai * 0.034 / 2;
+      //.println("Aguardando Saida");
+      if (distanceSai <= 30) {
         saida += 1;
         pessoas += 1;
         Serial.println(pessoas);
         delay(1000);
       }
     }
-  } else if ((digitalRead(sensor) == HIGH) && entrada == saida) {
+  } else if (distanceSai <= 30 && entrada == saida) {
     saida += 1;
     while (entrada < saida) {
-      digitalWrite(trigPin, LOW);
+      digitalWrite(trigPinEnt, LOW);
       delayMicroseconds(2);
-      digitalWrite(trigPin, HIGH);
+      digitalWrite(trigPinEnt, HIGH);
       delayMicroseconds(10);
-      digitalWrite(trigPin, LOW);
-      duration = pulseIn(echoPin, HIGH);
-      distance = duration * 0.034 / 2;
+      digitalWrite(trigPinEnt, LOW);
+      durationEnt = pulseIn(echoPinEnt, HIGH);
+      distanceEnt = durationEnt * 0.034 / 2;
       //.println("Aguardando Saida");
-      if (distance <= 30) {
+      if (distanceEnt <= 30) {
         entrada += 1;
         Serial.println(pessoas);
 
